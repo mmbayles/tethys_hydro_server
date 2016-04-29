@@ -26,6 +26,10 @@ class TethysHydroserver(TethysAppBase):
         url_maps = (UrlMap(name='home',
                            url='tethys-hydro-server',
                            controller='tethys_hydro_server.controllers.home'),
+
+                     UrlMap(name='waterml',
+                           url='waterml',
+                           controller='tethys_hydro_server.controllers.waterml'),
         )
 
         return url_maps
