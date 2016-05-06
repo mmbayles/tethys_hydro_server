@@ -3,7 +3,7 @@ Network: TxRivers
 Vocabulary: TxRivers
 Menu_Group_Name: Texas River Monitoring Observations
 Service_WSDL: http://trm.imaginary.gov/wof.wsdl
-Timezone:-06:00
+
 TimezoneAbbreviation: CST
 
 [Default_Params]

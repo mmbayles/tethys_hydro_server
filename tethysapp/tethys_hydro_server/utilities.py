@@ -1,12 +1,7 @@
-import logging
-
-import wof
-import wof.flask
-# from csv_dao import CsvDao
 from wof.examples.flask.csv_server import csv_dao
-from wof.apps import spyned_1_0
 from wof.core import wofConfig, getSpyneApplications
-import wof.core_1_0 as wof_1_0
+import wof.core_1_1 as wof_1_1
+import StringIO
 """
     python runserver_csv.py
     Will run the exact example
@@ -17,40 +12,47 @@ import wof.core_1_0 as wof_1_0
     --values_file=data.csv
 
 """
+NSDEF = 'xmlns:gml="http://www.opengis.net/gml" \
+    xmlns:xlink="http://www.w3.org/1999/xlink" \
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema" \
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" \
+    xmlns:wtr="http://www.cuahsi.org/waterML/" \
+    xmlns="http://www.cuahsi.org/waterML/1.0/"'
+
+#This block of code was original part of the runserver_csv.py in the examples/csv_server
 def startServer(config,
                 sites_file,
                 values_file,
                 openPort):
     dao = csv_dao.CsvDao(sites_file, values_file)
-    print dir(dao)
-    print "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADAo"
-    app = wof.flask.create_wof_flask_app(dao, config)
 #    app.config['DEBUG'] = True
 
-
-    url = "http://127.0.0.1:" + str(openPort)
-    print "----------------------------------------------------------------"
-    print "Service endpoints"
-    for path in wof.flask.site_map_flask_wsgi_mount(app):
-        print "%s%s" % (url,path)
-
-    print "----------------------------------------------------------------"
-    print "----------------------------------------------------------------"
-    print "HTML Acess Service endpoints at "
-    for path in wof.site_map(app):
-        print "%s%s" % (url,path)
-
-    print "----------------------------------------------------------------"
+    #defined in core.py
     wConf = wofConfig(dao=dao, wofConfigFile=config)
+
+    #this block of code is defined in _init_.py in the flask folder. Orginally in the create_wof_flask_app and
+    #create_wof_flask_multipe functions
     templates = None
     openPort = None
     if hasattr(wConf, 'configObject' ):
         if hasattr(wConf.configObject, 'TEMPLATES' ):
             templates = wConf.configObject.TEMPLATES
-    wof_obj_1_0 = wof_1_0.WOF(wConf.dao, wConf.config, templates)
-    happy = wof.apps.spyned_1_0.GetSites(wof_obj_1_0,openPort,openPort,openPort)
-    print "hello"
-    print happy
+    wof_obj_1_1 = wof_1_1.WOF_1_1(wConf.dao, wConf.config, templates) #creates the object which contains the methods for
+    # getting the data in waterml format
 
-    # app.run(host='0.0.0.0', port=openPort, threaded=True)
-    return happy
+    location = 'txrivers:SanSaba'#parameters for the values reponse
+    variable = "txrivers:Discharge_cfs"
+    startDate = "2008-02-11"#can be empty strings
+    endDate = "2008-03-30"
+    authToken = None
+
+    timeSeriesResponse = wof_obj_1_1.create_get_values_response(
+            location, variable, startDate, endDate)
+    outStream = StringIO.StringIO()
+    timeSeriesResponse.export(
+            outStream, 0, name_="timeSeriesResponse",
+            namespacedef_=NSDEF)
+    values = outStream.getvalue()
+
+
+    return values #waterml file can be found at http://127.0.0.1:8000/apps/tethys-hydro-server/waterml/
